@@ -1,0 +1,7 @@
+# --index-url https://download.pytorch.org/whl/cu124
+torch==2.4
+torchvision
+torchdiffeq
+pytorch_lightning
+torchdyn
+

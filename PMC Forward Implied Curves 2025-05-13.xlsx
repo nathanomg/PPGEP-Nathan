@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en" class="app">
+<head>
+  <meta charset="utf-8" />
+  <title>PMC | Analytics</title>
+
+
+  <link rel="apple-touch-icon-precomposed" sizes="196x196" href="/images/favicons/favicon-196.png">
+  <link rel="apple-touch-icon-precomposed" sizes="180x180" href="/images/favicons/favicon-180.png">
+  <link rel="apple-touch-icon-precomposed" sizes="152x152" href="/images/favicons/favicon-152.png">
+  <link rel="apple-touch-icon-precomposed" sizes="144x144" href="/images/favicons/favicon-144.png">
+  <link rel="apple-touch-icon-precomposed" sizes="120x120" href="/images/favicons/favicon-120.png">
+  <link rel="apple-touch-icon-precomposed" sizes="114x114" href="/images/favicons/favicon-114.png">
+  <link rel="apple-touch-icon-precomposed" sizes="76x76" href="/images/favicons/favicon-76.png">
+  <link rel="apple-touch-icon-precomposed" sizes="72x72" href="/images/favicons/favicon-72.png">
+  <link rel="apple-touch-icon-precomposed" sizes="60x60" href="/images/favicons/favicon-60.png">
+  <link rel="apple-touch-icon-precomposed" sizes="57x57" href="/images/favicons/favicon-57.png">
+
+
+  <meta name="msapplication-TileColor" content="#FFFFFF">
+  <meta name="msapplication-TileImage" content="/images/favicons/favicon-144.png">
+
+  <meta name="application-name" content="Name">
+  <meta name="msapplication-tooltip" content="Tooltip">
+  <meta name="msapplication-config" content="/images/favicons/windows/ieconfig.xml">
+
+
+  <link rel="shortcut icon" href="/favicon.ico">
+  <link rel="icon" sizes="16x16 32x32" href="/favicon.ico">
+
+
+  <meta name="description" content="" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+
+<link href="/resources/jquery-ui/jquery-ui.min.css?v=1.11.4" rel="stylesheet">
+
+<link rel="stylesheet" href="/resources/bootstrap/css/bootstrap.css?v=3.2.0" type="text/css" />
+<link rel="stylesheet" href="/css/animate.css" type="text/css" />
+<link rel="stylesheet" href="/css/font-awesome.min.css?v=6.3.0" type="text/css" />
+<link rel="stylesheet" href="/css/solid.min.css?v=6.3.0" type="text/css" />
+<link rel="stylesheet" href="/css/icon.css" type="text/css" />
+<link rel="stylesheet" href="/css/font.css" type="text/css" />
+<link rel="stylesheet" href="/css/app.css" type="text/css" />
+<link rel="stylesheet" href="/css/PMC_CSS/pmc-analytics-custom-styles.css" type="text/css" />
+
+<link rel="stylesheet" href="/css/PMC_CSS/pmc-analytics-styles.css" type="text/css" />
+
+<!-- jQuery -->
+<script src="/resources/jquery/jquery-1.11.1/jquery-1.11.1.min.js?v=1.11.1" type="text/jscript" type="text/javascript" ></script>
+
+<!-- Bootstrap -->
+<script src="/resources/bootstrap/js/bootstrap.js?v=3.3.7" type="text/javascript" ></script>
+
+<!-- jQuery UI -->
+<script src="/resources/jquery-ui/jquery-ui.js?v=1.11.4" type="text/javascript" ></script>
+
+<!-- Google Analytics -->
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-6VRELR9GM1"></script>
+<script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'G-6VRELR9GM1');
+</script>
+<script type="text/javascript">
+
+  var browserKey = '6LfMFRUTAAAAABR6DBg9nzGuCiX2gBMTs_4ogkFd';
+
+</script>
+  <script src="/js/PMC_scripts/utils/login_functions.js" type="text/javascript" ></script>
+  
+
+</head>
+
+
+<body class="">
+
+
+
+  
+<div id="loginTermsModal" class="modal fade">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
+        <h4 class="modal-title">Login Terms</h4>
+      </div>
+
+      <div class="modal-body">
+        <div class="row">
+          
+          <div class="col-sm-12">
+              
+            <div id="loginTerms">
+            
+              By your logging into your organization’s online account with PMC Analytics US LLC or PMC Analytics UK Limited (“Account”) your organization is deemed to have accepted the engagement letter with terms and conditions which have been previously provided to your organization. The engagement letter and terms and conditions can also be accessed by you after logging into your Account.
+                
+            </div>
+          
+          </div>
+          
+        </div>
+      </div>
+      
+      
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+      
+    </div>
+    
+  </div>
+  
+</div>
+
+  <section id="content" class="m-t-lg wrapper-md ">
+
+    <div class="container text-center">
+      <a class="" href="#">
+        <img class="w-3 img-responsive center-block" src="/images/logos/PMC Analytics RGB Logo - w400.png" alt="PMC Analytics">
+      </a>
+    </div>
+
+
+    <div class="container aside-xl">
+
+      <section class="m-b-lg">
+
+        <header class="wrapper text-center m-t-lg ">
+          <div class="h4">Login to your account</div>
+        </header>
+
+        <form id="loginForm" name="loginForm" method="post" autocomplete="off" action="/login-exec">
+          <div class="list-group m-b">
+            <div class="list-group-item">
+              <input type="email" placeholder="Email" class="form-control no-border" id="login" name='login'
+                value="">
+            </div>
+            <div class="list-group-item">
+               <input type="password" placeholder="Password" class="form-control no-border" id="password" name='password'>
+            </div>
+            
+
+            
+          </div>
+            
+          <!-- Google ReCaptcha loads -->
+            <div id="loginCaptchaContainer" class="m-b">
+              <div id="loginCaptcha"></div>
+            </div>
+          <!-- Google ReCaptcha load END -->
+
+
+            <button type="submit" class="btn btn-lg btn-primary btn-block m-t-xs m-b">Sign in</button>
+
+            <button type="submit" class="btn btn-lg btn-secondary btn-block btn-light-grey" name="sso-login">
+                Enterprise Single Sign-On 
+                <i class="fa fa-sign-in m-l-xs"></i>
+            </button>
+            
+          
+          <div class="text-center m-t m-b">
+            <a href="/misplacedCredentials">
+                Forgot password?
+            </a>
+          </div>
+
+          <div class="text-center m-t m-b">
+            <a data-toggle="modal" href="#loginTermsModal">
+              Terms
+            </a>
+          </div>
+
+        </form>
+
+      </section>
+
+      <section class="m-b-lg">
+        <div id="ie11_incompatible_modal" class="modal fade" tabindex="-1" role="dialog">
+          <div class="modal-dialog" role="document">
+            <div class="modal-content bg-danger">
+              <div class="modal-header">
+                <h4 class="modal-title">Internet Explorer Compatibility Warning!</h4>
+              </div>
+              <div class="modal-body">
+                <p>
+                  PMC Analytics has detected Microsoft Internet Explorer. For full functionality please use Chrome, Firefox, or Edge.
+                </p>
+              </div>
+              <div class="modal-footer">
+                <button id="close_ie_modal" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+              </div>
+            </div><!-- /.modal-content -->
+          </div><!-- /.modal-dialog -->
+    </div>
+  </section>
+
+        <section class="m-b-lg">
+            <div id="no_creds_modal" class="modal" tabindex="-1" role="dialog" style="display: none; background: rgba(0, 0, 0, 0.7); ">
+                <div class="modal-dialog" role="document" style="top: calc(50% - 180px)">
+                    <div class="modal-content">
+                        <div class="modal-body">
+                            <p>Please enter your username and password.</p>
+                        </div>
+                        <div class="modal-footer" id="sso-modal-buttons">
+                            <button id="close_no_creds_modal" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+  <!-- footer -->
+  <!-- Version info -->
+  <div class="text-top m-t m-b" style="position: fixed; right: 0; bottom: 0; background-color: transparent; padding: 10px;">
+    <span class="app-version">
+       <!-- <i class="fa fa-info-circle fa-2x"></i>  -->
+      <!--  Version prod
+  -->
+      Version 1.8.3
+    </span>
+  </div>
+</body>
+</html>
