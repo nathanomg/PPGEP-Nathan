@@ -2,13 +2,16 @@ import pandas as pd
 from pulp import *
 import matplotlib.pyplot as plt
 
+file_name = "Inputs.xlsx"
+# file_name = "Inputs - Copia.xlsx"
+
 # Reading the data from Excel
-df_submarkets = pd.read_excel("Inputs.xlsx", sheet_name="Submarkets")
-inflows = pd.read_excel("Inputs.xlsx", sheet_name="Inflows")
-df_thermal_plants = pd.read_excel("Inputs.xlsx", sheet_name="Thermals")
-df_hydroelectric_plants = pd.read_excel("Inputs.xlsx", sheet_name="Hydroelectrics")
-df_load = pd.read_excel("Inputs.xlsx", sheet_name="Load")
-df_interconnections = pd.read_excel("Inputs.xlsx", sheet_name="Interchanges")
+df_submarkets = pd.read_excel(file_name, sheet_name="Submarkets")
+inflows = pd.read_excel(file_name, sheet_name="Inflows")
+df_thermal_plants = pd.read_excel(file_name, sheet_name="Thermals")
+df_hydroelectric_plants = pd.read_excel(file_name, sheet_name="Hydroelectrics")
+df_load = pd.read_excel(file_name, sheet_name="Load")
+df_interconnections = pd.read_excel(file_name, sheet_name="Interchanges")
 
 thermal_plants_submarket = []
 hydroelectric_plants_submarket = []
@@ -94,14 +97,13 @@ def solve_problem():
                       for s in range(n_submarkets) 
                       for t in range(len(thermal_plants_submarket[s])) 
                       for i in range(n_stages)]) \
-               + lpSum([hydroelectric_plant_generation[h, s, i] * 0  # Assuming hydro generation has no cost
+               + lpSum([hydroelectric_plant_generation[h, s, i] * future_costs[(s, i)]  # Assuming hydro generation has no cost
                         for s in range(n_submarkets) 
                         for h in range(len(hydroelectric_plants_submarket[s])) 
                         for i in range(n_stages)]) \
                + lpSum([penalty_cost * load_deficit[s, i] 
                         for s in range(n_submarkets) 
-                        for i in range(n_stages)]) \
-               + lpSum(future_costs[(s,i)] for s in range(n_sub) for i in range(n_stages))
+                        for i in range(n_stages)]) 
 
     # Constraints for Load Deficit and Future Cost Estimation
     load_balance_constraints = {}  # Store constraints as a dictionary
@@ -142,22 +144,10 @@ def solve_problem():
     # Solve the optimization problem
     problem.solve(PULP_CBC_CMD(msg=1))
 
-    # Calculate upper bound (UB)
-    UB = value(problem.objective)
-
-    # Calculate lower bound (LB) from future cost estimates
-    true_cost = (
-        sum(thermal_plant_generation[t,s,i].value() *  thermal_plants_submarket[s].cvu[t]
-            for s in range(n_submarkets) for t in range(len(thermal_plants_submarket[s]))
-            for i in range(n_stages))
-        + penalty_cost * sum(load_deficit[s,i].value()
-            for s in range(n_submarkets) for i in range(n_stages))
-    )
-    UB = true_cost
-    return UB, LB, load_balance_constraints
+    return load_balance_constraints
 
 # Iteration logic
-iterations = 10  # Set the maximum number of iterations
+iterations = 100  # Set the maximum number of iterations
 convergence_tolerance = 0.01  # Tolerance for convergence
 
 previous_UB = float('inf')
@@ -169,12 +159,44 @@ UB_list = []
 LB_list = []
 gap_list = []
 
+UB = 0
+
 for iteration in range(iterations):
     print(f"Iteration {iteration + 1}")
 
     # Solve the problem and get the upper bound (UB), lower bound (LB), and dual variables
-    UB, LB, load_balance_constraints = solve_problem()
+    load_balance_constraints = solve_problem()
 
+    # Calculate the average of the marginal price of the current and the next stage for each stage
+    future_costs = {}
+
+
+    # Calculate average marginal cost for each submarket
+    avg_marginal_cost_by_submarket = {}
+    for s in range(n_submarkets):
+        marginal_costs = [load_balance_constraints[(s, i)].pi for i in range(n_stages)]
+        avg_mc = sum(marginal_costs) / len(marginal_costs) if marginal_costs else 0
+        avg_marginal_cost_by_submarket[s] = avg_mc
+
+    # Set future_costs for each (s, i) to the average marginal cost of submarket s
+    for s in range(n_submarkets):
+        for i in range(n_stages):
+            future_costs[(s, i)] = avg_marginal_cost_by_submarket[s]
+
+    # Example: print or use avg_marginal_cost_by_stage as needed
+    #print(avg_marginal_cost_by_stage)
+
+    # Calculate the average future cost by submarket
+    avg_future_cost_by_submarket = {}
+    for s in range(n_submarkets):
+        submarket_costs = [future_costs[(s, i)] for i in range(n_stages)]
+        avg_future_cost_by_submarket[s] = sum(submarket_costs) / len(submarket_costs) if submarket_costs else 0
+
+    # For UB, use the overall average of submarket averages
+    avg_future_cost = sum(avg_future_cost_by_submarket.values()) / n_submarkets if n_submarkets else 0
+    
+    LB = UB
+    UB = avg_future_cost
     # Check convergence based on the gap between UB and LB
     gap = abs(UB - LB)
     print(f"UB: {UB}, LB: {LB}, Gap: {gap}")
@@ -183,17 +205,11 @@ for iteration in range(iterations):
     UB_list.append(UB)
     LB_list.append(LB)
     gap_list.append(gap)
- 
+
     if gap < convergence_tolerance:
         print("Convergence reached!")
         break
 
-    # Update future costs with the dual variables (marginal costs)
-    for s in range(n_submarkets):
-        for i in range(n_stages):
-            pi = load_balance_constraints[(s,i)].pi                 # shadow price (R$/MW)
-            exp_load_next = df_load.iloc[s, i+1] if i+1 < n_stages else 0
-            future_costs[(s,i)] = pi * exp_load_next                # R$ expected
 
     print(f"End of iteration {iteration + 1}\n")
 
@@ -207,4 +223,99 @@ plt.ylabel("Value ($)")
 plt.title("Convergence of Upper and Lower Bounds")
 plt.legend()
 plt.grid(True)
+plt.show()
+import numpy as np
+import matplotlib.colors as mcolors
+
+stage_names = [f"Stage {i+1}" for i in range(n_stages)]
+
+# Marginal Cost by Stage and Submarket (Bar Plot)
+marginal_cost_matrix = np.zeros((n_submarkets, n_stages))
+for s in range(n_submarkets):
+    for i in range(n_stages):
+        marginal_cost_matrix[s, i] = load_balance_constraints[(s, i)].pi
+
+fig, ax = plt.subplots(figsize=(12, 6))
+bar_width = 0.8 / n_submarkets
+indices = np.arange(n_stages)
+for s in range(n_submarkets):
+    ax.bar(indices + s * bar_width, marginal_cost_matrix[s], bar_width, label=f"{df_submarkets.iloc[s,0]}")
+ax.set_xlabel("Stage")
+ax.set_ylabel("Marginal Cost")
+ax.set_title("Marginal Cost by Stage and Submarket")
+ax.set_xticks(indices + bar_width * (n_submarkets - 1) / 2)
+ax.set_xticklabels(stage_names)
+ax.legend(title="Submarket")
+plt.tight_layout()
+plt.show()
+
+# Sum of Reservoir Levels by Submarket and Stage (Line Plot)
+reservoir_sum_matrix = np.zeros((n_submarkets, n_stages))
+for s in range(n_submarkets):
+    for i in range(n_stages):
+        reservoir_sum = 0
+        for h in range(len(hydroelectric_plants_submarket[s])):
+            val = reservoir_level[h, s, i].varValue
+            reservoir_sum += val if val is not None else 0
+        reservoir_sum_matrix[s, i] = reservoir_sum
+
+fig, ax = plt.subplots(figsize=(12, 6))
+for s in range(n_submarkets):
+    ax.plot(range(1, n_stages + 1), reservoir_sum_matrix[s], marker='o', label=f"{df_submarkets.iloc[s,0]}")
+ax.set_xlabel("Stage")
+ax.set_ylabel("Sum of Reservoir Levels")
+ax.set_title("Sum of Reservoirs by Submarket and Stage")
+ax.set_xticks(range(1, n_stages + 1))
+ax.set_xticklabels(stage_names)
+ax.legend(title="Submarket")
+ax.grid(True)
+plt.tight_layout()
+plt.show()
+
+# Flows Between Submarkets by Stage (Line Plot)
+flow_matrix = np.zeros((n_submarkets, n_submarkets, n_stages))
+for i in range(n_stages):
+    for o in range(n_submarkets):
+        for d in range(n_submarkets):
+            val = interchanges[o, d, i].varValue
+            flow_matrix[o, d, i] = val if val is not None else 0
+
+plt.figure(figsize=(12, 7))
+colors = list(mcolors.TABLEAU_COLORS.values())
+for o in range(n_submarkets):
+    for d in range(n_submarkets):
+        if o != d:
+            flows = flow_matrix[o, d, :]
+            label = f"{df_submarkets.iloc[o,0]} → {df_submarkets.iloc[d,0]}"
+            plt.plot(range(1, n_stages + 1), flows, label=label, color=colors[(o * n_submarkets + d) % len(colors)])
+plt.xlabel("Stage")
+plt.ylabel("Flow (MW)")
+plt.title("Flows Between Submarkets by Stage")
+plt.xticks(range(1, n_stages + 1), stage_names)
+plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left', title="Flow")
+plt.grid(True)
+plt.tight_layout()
+plt.show()
+
+# Thermal Dispatch by Submarket and Stage (Line Plot)
+thermal_dispatch_matrix = np.zeros((n_submarkets, n_stages))
+for s in range(n_submarkets):
+    for i in range(n_stages):
+        dispatch_sum = 0
+        for t in range(len(thermal_plants_submarket[s])):
+            val = thermal_plant_generation[t, s, i].varValue
+            dispatch_sum += val if val is not None else 0
+        thermal_dispatch_matrix[s, i] = dispatch_sum
+
+fig, ax = plt.subplots(figsize=(12, 6))
+for s in range(n_submarkets):
+    ax.plot(range(1, n_stages + 1), thermal_dispatch_matrix[s], marker='o', label=f"{df_submarkets.iloc[s,0]}")
+ax.set_xlabel("Stage")
+ax.set_ylabel("Thermal Dispatch (MW)")
+ax.set_title("Thermal Dispatch by Submarket and Stage")
+ax.set_xticks(range(1, n_stages + 1))
+ax.set_xticklabels(stage_names)
+ax.legend(title="Submarket")
+ax.grid(True)
+plt.tight_layout()
 plt.show()
